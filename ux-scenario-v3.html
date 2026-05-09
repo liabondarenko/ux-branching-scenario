@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ви — дизайнер інтерфейсів</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0eeea;
+    --border: #e0ddd7;
+    --accent: #1a7f6e;
+    --accent2: #d94f3a;
+    --accent3: #b36a00;
+    --text: #1a1917;
+    --text-muted: #6b6760;
+    --correct: #1e7e34;
+    --wrong: #c0392b;
+    --partial: #a05c00;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* HEADER */
+  .header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .header-logo span { color: var(--text-muted); font-style: italic; font-size: 14px; }
+
+  .progress-bar-wrap {
+    flex: 1;
+    max-width: 380px;
+    margin: 0 20px;
+  }
+  .progress-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-track {
+    height: 4px;
+    background: #e0ddd7;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #2aaa8a);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .score-badge {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent3);
+    background: #fdf6e8;
+    border: 1px solid #e0c47a;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* MAIN */
+  .main {
+    width: 100%;
+    max-width: 820px;
+    padding: 32px 20px 60px;
+  }
+
+  /* SCREEN */
+  .screen { display: none; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* NODE CARD */
+  .node-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .node-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 2px;
+    background: var(--accent);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+
+  .context-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .context-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 0;
+  }
+  .context-text em {
+    color: var(--accent3);
+    font-style: italic;
+  }
+  .context-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .question {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 22px;
+  }
+
+  /* CHOICES */
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+
+  .choice-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    width: 100%;
+  }
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: #e8f5f2;
+    transform: translateX(3px);
+  }
+  .choice-btn.selected-correct {
+    border-color: var(--correct);
+    background: #eaf7ec;
+  }
+  .choice-btn.selected-wrong {
+    border-color: var(--wrong);
+    background: #fdf0ee;
+  }
+  .choice-btn.selected-partial {
+    border-color: var(--partial);
+    background: #fdf6e8;
+  }
+  .choice-btn:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+  .choice-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px; height: 28px;
+    border-radius: 6px;
+    background: #f0eeea;
+    border: 1px solid #d0cdc7;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+  }
+  .selected-correct .choice-letter {
+    background: var(--correct);
+    border-color: var(--correct);
+    color: #fff;
+  }
+  .selected-wrong .choice-letter {
+    background: var(--wrong);
+    border-color: var(--wrong);
+    color: #fff;
+  }
+  .selected-partial .choice-letter {
+    background: var(--partial);
+    border-color: var(--partial);
+    color: #fff;
+  }
+
+  /* FEEDBACK */
+  .feedback {
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.65;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .feedback.show { display: block; }
+  .feedback-correct {
+    background: #eaf7ec;
+    border: 1px solid #a8d9b0;
+    border-left: 4px solid var(--correct);
+  }
+  .feedback-wrong {
+    background: #fdf0ee;
+    border: 1px solid #e8b4ae;
+    border-left: 4px solid var(--wrong);
+  }
+  .feedback-partial {
+    background: #fdf6e8;
+    border: 1px solid #e0c47a;
+    border-left: 4px solid var(--partial);
+  }
+  .feedback-head {
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .feedback-correct .feedback-head { color: var(--correct); }
+  .feedback-wrong .feedback-head { color: var(--wrong); }
+  .feedback-partial .feedback-head { color: var(--partial); }
+
+  /* ACTION BUTTONS */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+  }
+  .btn-primary:hover { background: #155f52; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SPECIAL CARDS */
+  .quote-card {
+    background: #eef8f5;
+    border: 1px solid #b8dfd7;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+
+  .persona-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 12px 0;
+  }
+  .persona-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 8px;
+  }
+  .persona-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+  }
+  .bullet-list li {
+    padding: 6px 0 6px 20px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .bullet-list li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* START SCREEN */
+  .start-hero {
+    text-align: center;
+    padding: 48px 20px 40px;
+  }
+  .start-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: #eef8f5;
+    border: 1px solid #b8dfd7;
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .start-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #1a1917 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .start-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 560px;
+    margin: 0 auto 36px;
+  }
+  .meta-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .meta-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .meta-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .scenario-intro {
+    background: #fffbf0;
+    border: 1px solid #e0d4b0;
+    border-left: 4px solid var(--accent3);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin-bottom: 28px;
+    font-size: 15px;
+    line-height: 1.75;
+    text-align: left;
+  }
+  .scenario-intro strong { color: var(--accent3); }
+  .scenario-intro em { color: var(--text-muted); font-style: italic; }
+
+  /* ENDING SCREEN */
+  .ending-screen {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .ending-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .ending-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    margin-bottom: 8px;
+  }
+  .ending-score {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .star {
+    font-size: 22px;
+    transition: all 0.2s;
+  }
+  .star.lit { color: var(--accent3); }
+  .star.dim { color: var(--border); }
+  .ending-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    max-width: 540px;
+    margin: 0 auto 28px;
+  }
+  .ending-tip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 540px;
+    margin: 0 auto 28px;
+    text-align: left;
+    line-height: 1.65;
+  }
+  .ending-tip strong { color: var(--text); }
+
+  /* NODE TRACKER */
+  .node-tracker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .track-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #e0ddd7;
+    border: 1.5px solid #c5c2bc;
+    transition: all 0.3s;
+  }
+  .track-dot.done { background: var(--accent); border-color: var(--accent); }
+  .track-dot.current {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 3px rgba(179,106,0,0.15);
+  }
+  .track-line {
+    flex: 1;
+    height: 1.5px;
+    background: #e0ddd7;
+    max-width: 28px;
+  }
+
+  /* DIALOG style for context */
+  .dialog-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    position: relative;
+  }
+  .dialog-speaker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 8px;
+  }
+  .dialog-text {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .meta-grid { grid-template-columns: 1fr 1fr; }
+    .start-title { font-size: 28px; }
+    .card { padding: 20px; }
+    .header-logo span { display: none; }
+    .progress-bar-wrap { max-width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">Інтерактивний сценарій <span>/ user persona та user flow</span></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span id="progressLabel">Початок</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="score-badge" id="scoreBadge">★ 0 / 5</div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════ START ═══════════════════════════ -->
+<div class="screen active" id="screen-start">
+  <div class="start-hero">
+    <div class="start-badge">Інтерактивний сценарій</div>
+    <h1 class="start-title">Ви — дизайнер інтерфейсів</h1>
+    <p class="start-subtitle">Дослідження користувачів: створення user persona та user flow<br>
+    <em>Дисципліна «Прототипування та дизайн інтерфейсів» · Тема 3</em></p>
+  </div>
+
+  <div class="scenario-intro">
+    <strong>Понеділок, 9:00. Перший день роботи у стартапі <em>МедЕкспрес</em>.</strong>
+    Команда розробляє мобільний застосунок для доставки ліків — конкурент <em>ЄАптеки</em> та <em>Liki24</em>.
+    На зустрічі директор сказав: «У нас 6 тижнів до запуску першої версії продукту. Користувач — будь-хто, хто хоче замовити ліки».
+    До вас підходить керівниця продукту Аня й просить: «Перш ніж робити макети, я хочу, щоб ви зробили дослідження.
+    <strong>З чого почнете?</strong>»
+  </div>
+
+  <div class="card" style="background:#fafaf7; border:1px solid #e0ddd7; margin-top:18px">
+    <div class="context-label">Після проходження сценарію ви зможете</div>
+    <ul class="bullet-list" style="margin-top:8px">
+      <li><strong>Спланувати</strong> дослідження користувачів перед розробкою інтерфейсу — обрати методи, що відповідають задачі та бюджету</li>
+      <li><strong>Розрізняти</strong> історичні та гіпотетичні питання в інтерв'ю та формулювати такі, що дають достовірні дані</li>
+      <li><strong>Перетворити</strong> нотатки інтерв'ю на user persona — згрупувати інсайти, виокремити болі, мотивації та контекст</li>
+      <li><strong>Побудувати</strong> user flow, обґрунтований болями та мотиваціями персони, із зазначенням точок фрустрації</li>
+      <li><strong>Аргументувати</strong> дизайнерські рішення перед командою з опорою на дані та принципи (зокрема інклюзивний дизайн)</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center">
+    <button class="btn btn-primary" onclick="goTo('node1')" style="font-size:16px; padding: 14px 36px;">
+      Розпочати сценарій →
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 1 ═══════════════════════════ -->
+<div class="screen" id="screen-node1">
+  <div class="node-tag">Вузол 1 · Перший вибір</div>
+  <div class="node-tracker" id="tracker-node1"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">
+      Аня просить вас зробити дослідження перед тим, як малювати макети.
+      <strong>З чого почнете?</strong>
+    </p>
+  </div>
+
+  <p class="question">Що зробити першим?</p>
+
+  <div class="choices" id="choices-node1">
+    <button class="choice-btn" onclick="choose('node1','A')">
+      <span class="choice-letter">A</span>
+      Відкрию Figma і почну робити вайрфрейми головного екрана — без екранів немає що обговорювати.
+    </button>
+    <button class="choice-btn" onclick="choose('node1','B')">
+      <span class="choice-letter">B</span>
+      Запущу опитування у Google Forms: «Які функції ви хотіли б у застосунку аптеки?» — розішлю в соцмережах.
+    </button>
+    <button class="choice-btn" onclick="choose('node1','C')">
+      <span class="choice-letter">C</span>
+      Попрошу Аню організувати інтерв'ю з 5 потенційними користувачами (різного віку та з різним досвідом покупки ліків онлайн).
+    </button>
+    <button class="choice-btn" onclick="choose('node1','D')">
+      <span class="choice-letter">D</span>
+      Згенерую персону через ChatGPT — швидко й вистачить для початку.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node1-A">
+    <div class="feedback-head">⚠ Класична пастка</div>
+    Ви потрапили у пастку «дизайнер як користувач». Через 3 дні виявилося, що головний екран побудований
+    для молодих технічно грамотних людей, а не для реальних покупців ліків. Стів Круг у <em>«Don't Make Me Think»</em>
+    називає це <strong>«розривом між дизайнером та реальним користувачем»</strong>. До макетів — дослідження. Завжди.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node1')">← Спробувати інший варіант</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node1-B">
+    <div class="feedback-head">⚠ Пастка самовибірки</div>
+    Через тиждень 200 відповідей — переважно від молоді 18–25, бо саме вони активні в соцмережах.
+    Технічний директор питає: «Ви знаєте, що 70% покупців ліків онлайн — це люди старші 50?»
+    Опитування має пастку <strong>упередженість самовибірки</strong>: відповідають ті, кого легко дістати.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node1')">← Спробувати інший варіант</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node1-C">
+    <div class="feedback-head">✓ Правильно!</div>
+    Аня посміхається: «Молодець. Ви мислите як дослідник, а не як виконавець. Інтерв'ю з реальними людьми — основа якісного UX.
+    Через 2 дні організую вам 5 співрозмовників. А поки що — давайте готуватися. Питання: що саме ви будете у них питати?»
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node2')">Далі: Підготовка до інтерв'ю →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node1-D">
+    <div class="feedback-head">⚠ ШІ ≠ Дослідження</div>
+    Персона з ChatGPT: «Олена, 35, маркетолог, цінує зручність». Аня питає:
+    «Скільки разів за місяць Олена купувала ліки онлайн? Які саме? Рецептурні?»
+    ШІ генерує <strong>середнє з інтернету</strong>. Реальна персона будується на реальних даних.
+    ШІ прискорює оформлення вже зібраних даних — але не замінює дослідження.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node1')">← Спробувати інший варіант</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 2 ═══════════════════════════ -->
+<div class="screen" id="screen-node2">
+  <div class="node-tag">Вузол 2 · Підготовка до інтерв'ю</div>
+  <div class="node-tracker" id="tracker-node2"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">
+      Аня дала вам шаблон із 25 питань. Серед них є і хороші, і погані:
+    </p>
+    <ul class="bullet-list" style="margin-top:10px">
+      <li>«Чи купуєте ви ліки онлайн?»</li>
+      <li>«Чому ви досі не користуєтеся доставкою ліків?»</li>
+      <li>«Розкажіть, як ви <em>востаннє</em> купували ліки. Що було складно?»</li>
+      <li>«Ви б купили в нас?»</li>
+      <li>«На скільки балів від 1 до 10 ви оцінюєте ідею МедЕкспрес?»</li>
+    </ul>
+    <div class="dialog-box" style="margin-top:14px">
+      <div class="dialog-speaker">Аня</div>
+      <div class="dialog-text">«Я знаю, що в цьому списку є хороші питання й погані. Відкинь 2 поганих»</div>
+    </div>
+  </div>
+
+  <p class="question">Які два питання треба прибрати?</p>
+
+  <div class="choices" id="choices-node2">
+    <button class="choice-btn" onclick="choose('node2','A')">
+      <span class="choice-letter">A</span>
+      Відкинути «Розкажіть, як ви востаннє купували ліки» — занадто загальне.
+    </button>
+    <button class="choice-btn" onclick="choose('node2','B')">
+      <span class="choice-letter">B</span>
+      Відкинути «Чому ви досі не користуєтеся доставкою?» та «Ви б купили в нас?»
+    </button>
+    <button class="choice-btn" onclick="choose('node2','C')">
+      <span class="choice-letter">C</span>
+      Відкинути «На скільки балів від 1 до 10...» — числа нічого не дають.
+    </button>
+    <button class="choice-btn" onclick="choose('node2','D')">
+      <span class="choice-letter">D</span>
+      Залишити всі 5 — більше даних = краще.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node2-A">
+    <div class="feedback-head">⚠ Навпаки!</div>
+    «Розкажіть, як ви востаннє купували ліки» — це <strong>найкраще питання</strong> у списку.
+    Воно <em>історичне</em> (про реальний минулий досвід), а не <em>гіпотетичне</em> (про намір).
+    Роб Фіцпатрік у <em>«The Mom Test»</em> це називає золотим правилом дослідження:
+    <strong>питай про минуле, не про майбутнє</strong>.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node2')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node2-B">
+    <div class="feedback-head">✓ Точно!</div>
+    «Чому не користуєтеся?» провокує людину вигадати причину, що звучить розумно.
+    «Ви б купили?» — питання про майбутнє, на яке всі відповідають «так» з ввічливості, а потім не купують.
+    Це класичні пастки, які описують Стів Круг та Дон Норман.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node3')">Далі: Перше інтерв'ю →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node2-C">
+    <div class="feedback-head">⚠ Є гірші питання</div>
+    Числова оцінка дійсно слабка — але серед цих питань є небезпечніші. 
+    Питання про <strong>гіпотетичні наміри</strong> («ви б купили?», «чому досі ні?») 
+    дають викривлені дані систематично, а не просто «не дають» даних.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node2')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node2-D">
+    <div class="feedback-head">⚠ Якість vs кількість</div>
+    «Більше даних = краще» — це інтуїтивно, але <strong>більше поганих даних = більше неправильних висновків</strong>.
+    Якісне UX дослідження — це малі вибірки з гарними питаннями, а не великі з поганими.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node2')">← Спробувати знову</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 3 ═══════════════════════════ -->
+<div class="screen" id="screen-node3">
+  <div class="node-tag">Вузол 3 · Перше інтерв'ю</div>
+  <div class="node-tracker" id="tracker-node3"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">Перед вами — <strong>Любов Петрівна, 64 роки</strong>. Ви питаєте: «Розкажіть, як ви востаннє купували ліки».</p>
+    <div class="dialog-box">
+      <div class="dialog-speaker">Любов Петрівна</div>
+      <div class="dialog-text">«У понеділок. Онука викликала Glovo з Аптеки низьких цін. Я попросила її, бо сама не вмію цим користуватися. У мене кардіопрепарат закінчився, аптека внизу будинку зачинена після 21:00, а мені терміново»</div>
+    </div>
+  </div>
+
+  <p class="question">Що ви зробите далі?</p>
+
+  <div class="choices" id="choices-node3">
+    <button class="choice-btn" onclick="choose('node3','A')">
+      <span class="choice-letter">A</span>
+      Запитати: «А чому ви самі не вмієте цим користуватися?»
+    </button>
+    <button class="choice-btn" onclick="choose('node3','B')">
+      <span class="choice-letter">B</span>
+      Запитати: «А ваша онука часто вам допомагає? Розкажіть про це детальніше».
+    </button>
+    <button class="choice-btn" onclick="choose('node3','C')">
+      <span class="choice-letter">C</span>
+      Перейти до наступного питання зі списку, не відволікатися.
+    </button>
+    <button class="choice-btn" onclick="choose('node3','D')">
+      <span class="choice-letter">D</span>
+      Розказати, що в нашому застосунку буде дуже простий інтерфейс саме для таких людей як вона.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node3-A">
+    <div class="feedback-head">⚠ Питання звучить як докір</div>
+    «Чому не вмієте» — Любов Петрівна почне виправдовуватися або захищатися.
+    Ви втратите довіру і достовірні дані. Краще питати про <strong>ситуацію</strong>, не про <strong>особистість</strong>.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node3')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node3-B">
+    <div class="feedback-head">✓ Золота жила!</div>
+    Вона розказує: «Онука живе зі мною. Завжди допомагає з телефоном. Вчора її не було до 23-ї,
+    я ходила без ліків і нервувала». Ви знайшли <strong>першу справжню персону</strong>:
+    не «жінка 64+, що замовляє ліки», а <em>«літня людина, яка купує ліки через посередника-родича»</em>.
+    Це дві різні персони з різними потребами.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node4')">Далі: Аналіз даних →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node3-C">
+    <div class="feedback-head">⚠ Золота жила втрачена</div>
+    Ви втратили ключовий інсайт. У дослідженні є правило: коли користувач почав розказувати <strong>історію</strong>,
+    забудь про скрипт — іди вглиб. У сухому списку питань ви не дізнаєтесь головного:
+    що ліки часто замовляють <strong>не для себе і не самостійно</strong>.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node3')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node3-D">
+    <div class="feedback-head">⚠ Дослідник ≠ промоутер</div>
+    Класична помилка — починати продавати замість слухати. Тепер Любов Петрівна
+    говоритиме вам те, що ви <strong>хочете почути</strong>, а не правду.
+    Дослідник — це слухач, не торговий представник.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node3')">← Спробувати знову</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 4 ═══════════════════════════ -->
+<div class="screen" id="screen-node4">
+  <div class="node-tag">Вузол 4 · Аналіз даних</div>
+  <div class="node-tracker" id="tracker-node4"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">Ви провели 5 інтерв'ю. У вас 30 сторінок нотаток:</p>
+    <ul class="bullet-list" style="margin-top:10px">
+      <li><strong>Любов Петрівна, 64</strong> — замовляє через онуку. Не довіряє онлайну.</li>
+      <li><strong>Дмитро, 38</strong> — програміст, замовляє все онлайн, але ліки купує в офлайн-аптеці поряд з офісом.</li>
+      <li><strong>Олена, 41</strong> — мама двох дітей, замовляє дитячі ліки через ЄАптеку. Скаржиться на рекламу.</li>
+      <li><strong>Тарас, 27</strong> — спортсмен, замовляє вітаміни на iHerb, місцеві аптеки не відвідує.</li>
+      <li><strong>Галина Іванівна, 71</strong> — ходить в аптеку фізично, бо «там фармацевт знає, що мені треба».</li>
+    </ul>
+    <div class="dialog-box" style="margin-top:14px">
+      <div class="dialog-speaker">Аня</div>
+      <div class="dialog-text">«Скільки персон можна зробити з цих даних?»</div>
+    </div>
+  </div>
+
+  <p class="question">Скільки персон ви створите?</p>
+
+  <div class="choices" id="choices-node4">
+    <button class="choice-btn" onclick="choose('node4','A')">
+      <span class="choice-letter">A</span>
+      П'ять — по одній на кожного співрозмовника.
+    </button>
+    <button class="choice-btn" onclick="choose('node4','B')">
+      <span class="choice-letter">B</span>
+      Одну — узагальнюю всіх в «середнього користувача аптеки».
+    </button>
+    <button class="choice-btn" onclick="choose('node4','C')">
+      <span class="choice-letter">C</span>
+      Дві-три — згрупую за схожими потребами та поведінкою.
+    </button>
+    <button class="choice-btn" onclick="choose('node4','D')">
+      <span class="choice-letter">D</span>
+      Спочатку треба знайти патерни, а вже потім вирішувати скільки.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node4-A">
+    <div class="feedback-head">⚠ Забагато персон</div>
+    П'ять персон = п'ять різних дизайн-стратегій. Команда зійде з розуму.
+    Персона — це <strong>узагальнення</strong>, а не копія однієї конкретної людини.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node4')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node4-B">
+    <div class="feedback-head">⚠ «Дизайн для всіх» = ні для кого</div>
+    Одна персона на всіх — це повернення до проблеми. Любов Петрівна та Тарас —
+    <strong>фундаментально різні люди з протилежними потребами</strong>. Усереднити їх неможливо.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node4')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node4-C">
+    <div class="feedback-head">✓ Добра відповідь!</div>
+    На основі 5 інтерв'ю явно проглядаються <strong>3 групи</strong>:
+    «літні через посередника» (Любов, Галина), «батьки для родини» (Олена),
+    «активні цифрові» (Дмитро, Тарас). Кожна група — окрема персона.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node5')">Далі: Деталізація персони →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node4-D">
+    <div class="feedback-head">✓✓ Найкраща відповідь!</div>
+    Це <strong>професійна відповідь</strong>. Кількість персон — наслідок аналізу, не передумова.
+    Спочатку групування інсайтів за схожістю і кластеризація, потім рішення.
+    <em>+Бонусний бал до підсумкового результату.</em>
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node5', true)">Далі: Деталізація персони →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 5 ═══════════════════════════ -->
+<div class="screen" id="screen-node5">
+  <div class="node-tag">Вузол 5 · Деталізація персони</div>
+  <div class="node-tracker" id="tracker-node5"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">Ви зробили групу «Літні через посередника». Два варіанти, як її описати:</p>
+
+    <div class="persona-card" style="margin-top:14px">
+      <div class="persona-title">Варіант X — Абстрактний</div>
+      <div class="persona-text">«Літня жінка 60+, користується смартфоном, але невпевнено. Купує ліки. Цінує простоту».</div>
+    </div>
+
+    <div class="persona-card" style="border-color: #b8dfd7">
+      <div class="persona-title" style="color:var(--accent)">Варіант Y — Конкретний</div>
+      <div class="persona-text">
+        «Любов Петрівна, 64 роки, пенсіонерка, живе з дочкою та онукою. Має гіпертонію, постійно приймає 4 препарати.
+        Telegram є (читає канали онуки). Viber — основний месенджер. Щомісяця ходить в аптеку, де її знають продавці.
+        Раз на місяць замовляє через онуку Glovo, коли терміново.<br><br>
+        <strong>БІЛЬ:</strong> боїться помилитися з препаратом — онука колись купила не те дозування; не вміє розрізняти
+        ту саму назву ліків від різних виробників.<br>
+        <strong>ОЧІКУВАННЯ:</strong> «щоб як в аптеці» — щоб хтось сказав, що це той самий препарат, що завжди».
+      </div>
+    </div>
+  </div>
+
+  <p class="question">Який варіант кращий для роботи?</p>
+
+  <div class="choices" id="choices-node5">
+    <button class="choice-btn" onclick="choose('node5','A')">
+      <span class="choice-letter">A</span>
+      X — короткий, читається швидко.
+    </button>
+    <button class="choice-btn" onclick="choose('node5','B')">
+      <span class="choice-letter">B</span>
+      Y — конкретний, з деталями та реальними болями.
+    </button>
+    <button class="choice-btn" onclick="choose('node5','C')">
+      <span class="choice-letter">C</span>
+      Обидва — X для презентації, Y для роботи.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node5-A">
+    <div class="feedback-head">⚠ Стереотип, не людина</div>
+    Варіант X описує <strong>стереотип</strong>. «Цінує простоту» — порожня фраза, яку можна вставити
+    в будь-яку персону. Дизайнер з такої персони не знає, <em>що саме</em> треба робити:
+    великі кнопки? голосовий пошук? спрощені тексти? Конкретика дає рішення, абстракція — ні.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node5')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node5-B">
+    <div class="feedback-head">✓ Точно!</div>
+    Алан Купер, який ввів поняття «персона» у книзі <em>«The Inmates Are Running the Asylum»</em>,
+    наполягав: персона має бути такою конкретною, щоб ти міг уявити її обличчя.
+    Тільки тоді вона стає <strong>інструментом ухвалення рішень</strong>.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node6')">Далі: User Flow →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-partial" id="fb-node5-C">
+    <div class="feedback-head">△ Майже, але не зовсім</div>
+    Розумна спроба компромісу, але хибна. Якщо в презентації показати X, команда не зрозуміє,
+    <em>чому</em> треба робити саме так. Для презентації — короткий <strong>витяг</strong> з Y,
+    а не окремий X. Один документ, не два.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node6')">Далі: User Flow →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 6 ═══════════════════════════ -->
+<div class="screen" id="screen-node6">
+  <div class="node-tag">Вузол 6 · З якої персони починаємо User Flow?</div>
+  <div class="node-tracker" id="tracker-node6"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <div class="dialog-box">
+      <div class="dialog-speaker">Аня</div>
+      <div class="dialog-text">«Чудова персона. Тепер давайте побудуємо user flow для Любові Петрівни. Але стривайте — у нас же три персони. З якої починаємо?»</div>
+    </div>
+  </div>
+
+  <p class="question">Яку персону обрати першою для побудови user flow?</p>
+
+  <div class="choices" id="choices-node6">
+    <button class="choice-btn" onclick="choose('node6','A')">
+      <span class="choice-letter">A</span>
+      «Батьки для родини» — їх найбільше серед покупців ліків.
+    </button>
+    <button class="choice-btn" onclick="choose('node6','B')">
+      <span class="choice-letter">B</span>
+      «Активні цифрові» — звикли до апів, найкомфортніші для нас.
+    </button>
+    <button class="choice-btn" onclick="choose('node6','C')">
+      <span class="choice-letter">C</span>
+      «Літні через посередника» — найскладніший випадок: якщо працює для них, то й для решти теж.
+    </button>
+    <button class="choice-btn" onclick="choose('node6','D')">
+      <span class="choice-letter">D</span>
+      З усіх трьох паралельно — рівнозначно.
+    </button>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node6-A">
+    <div class="feedback-head">⚠ Логіка є, але є краща</div>
+    Аудиторія важлива, але є ще важливіший критерій: <strong>складність завдання</strong>.
+    Працюючи з найскладнішим випадком, ви вирішите проблеми, які навіть не бачили у простіших.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node6')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node6-B">
+    <div class="feedback-head">⚠ Легкий шлях = середній результат</div>
+    «Активні цифрові» — найлегші, але саме тому вони не покажуть вам справжніх болів дизайну.
+    Ви зробите середній продукт, який не дасть переваги над конкурентами.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node6')">← Спробувати знову</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node6-C">
+    <div class="feedback-head">✓ Принцип інклюзивного дизайну!</div>
+    Якщо інтерфейс працює для людини з <strong>найбільшими обмеженнями</strong>
+    (вікові, когнітивні, технічні), він точно працює для решти.
+    Цей підхід можна сформулювати так: <em>«вирішуй для одного — розширюй на всіх»</em>.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goTo('node7')">Далі: Будуємо user flow →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node6-D">
+    <div class="feedback-head">⚠ Паралельно = поверхово</div>
+    Паралельно означає поверхово по кожній. У дослідницькій роботі важлива <strong>глибина</strong>.
+    Краще зробити одну персону якісно, ніж три — поверхово.
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="retry('node6')">← Спробувати знову</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODES 7-11 ═══════════════════════════ -->
+
+<!-- NODE 7 -->
+<div class="screen" id="screen-node7">
+  <div class="node-tag">Вузол 7 · User Flow — Точка входу</div>
+  <div class="node-tracker" id="tracker-node7"></div>
+  <div class="card">
+    <div class="context-label">Дизайн-дилема</div>
+    <p class="context-text">
+      Ви будуєте user flow для <strong>Любові Петрівни</strong>.
+      Перше питання: <em>як вона взагалі дізнається про застосунок?</em>
+      Від точки входу залежить увесь сценарій першого досвіду користувача.
+    </p>
+  </div>
+  <p class="question">Який канал залучення найбільш реалістичний для Любові Петрівни?</p>
+  <div class="choices" id="choices-node7">
+    <button class="choice-btn" onclick="choose('node7','A')">
+      <span class="choice-letter">A</span>Реклама в соцмережах (Instagram, Facebook)
+    </button>
+    <button class="choice-btn" onclick="choose('node7','B')">
+      <span class="choice-letter">B</span>Онука встановить застосунок і покаже, як ним користуватися
+    </button>
+    <button class="choice-btn" onclick="choose('node7','C')">
+      <span class="choice-letter">C</span>Білборд або листівка біля аптеки
+    </button>
+    <button class="choice-btn" onclick="choose('node7','D')">
+      <span class="choice-letter">D</span>Реклама по телевізору
+    </button>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node7-A">
+    <div class="feedback-head">⚠ Digital-реклама не дістане її</div>
+    Любов Петрівна не переглядає Instagram і не клікає на банери.
+    Її канал — довіра до близьких, а не алгоритм.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node7')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node7-B">
+    <div class="feedback-head">✓ Онука — реальний канал</div>
+    Літні люди здебільшого довіряють технологіям, якщо їх рекомендує близький.
+    Це значить: що під час першого налаштування треба <strong>врахувати сценарій «налаштовано родичем»</strong>.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node8')">Далі →</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node7-C">
+    <div class="feedback-head">⚠ Фізична реклама не масштабується</div>
+    Білборди коштують дорого, а їхню ефективність складно оцінити. До того ж молодий стартап
+    навряд чи зможе покрити зовнішньою рекламою все місто.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node7')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node7-D">
+    <div class="feedback-head">⚠ ТВ — застаріло й дорого</div>
+    Телебачення не дає персоналізації і коштує занадто дорого для молодого стартапу.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node7')">← Спробувати знову</button></div>
+  </div>
+</div>
+
+<!-- NODE 8 -->
+<div class="screen" id="screen-node8">
+  <div class="node-tag">Вузол 8 · User Flow — Перший екран</div>
+  <div class="node-tracker" id="tracker-node8"></div>
+  <div class="card">
+    <div class="context-label">Дизайн-дилема</div>
+    <p class="context-text">
+      Онука відкрила застосунок. <strong>Що покажемо Любові Петрівні одразу після входу?</strong>
+      Пам'ятайте: вона купує одні й ті самі 4 препарати щомісяця.
+    </p>
+  </div>
+  <p class="question">Що має бути на головному екрані для цієї персони?</p>
+  <div class="choices" id="choices-node8">
+    <button class="choice-btn" onclick="choose('node8','A')">
+      <span class="choice-letter">A</span>Каталог ліків за категоріями (серцево-судинні, противірусні…)
+    </button>
+    <button class="choice-btn" onclick="choose('node8','B')">
+      <span class="choice-letter">B</span>Великий пошуковий рядок + чіткий CTA
+    </button>
+    <button class="choice-btn" onclick="choose('node8','C')">
+      <span class="choice-letter">C</span>Промо-банери з акціями тижня
+    </button>
+    <button class="choice-btn" onclick="choose('node8','D')">
+      <span class="choice-letter">D</span>Кнопка «Замовити знову» з останніми покупками
+    </button>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node8-A">
+    <div class="feedback-head">⚠ Категорії — не для неї</div>
+    Любов Петрівна знає <em>назву препарату</em>, але не знає медичну категорію.
+    Каталог за категоріями — інструмент для тих, хто «досліджує», не для тих, хто «замовляє знайоме».
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node8')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-partial" id="fb-node8-B">
+    <div class="feedback-head">△ Корисно, але не основне</div>
+    Пошук потрібен, але для Любові Петрівни <strong>головний use-case — повторне замовлення</strong>,
+    не пошук нового препарату. Є ще краща відповідь.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node8')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node8-C">
+    <div class="feedback-head">⚠ Промо — не її потреба</div>
+    Промо-банери для тих, хто хоче <em>вибирати</em> і <em>заощаджувати</em>.
+    Любов Петрівна хоче <strong>швидко і без помилок</strong> купити те саме, що завжди.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node8')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node8-D">
+    <div class="feedback-head">✓ Проєктуй для найпоширенішого завдання!</div>
+    Любов Петрівна купує одне і те саме щомісяця. «Замовити знову» — головний use-case.
+    Стів Круг: <em>«Проєктуй для найпоширенішого завдання»</em> — зроби найчастіше завдання найпростішим.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node9')">Далі →</button></div>
+  </div>
+</div>
+
+<!-- NODE 9 -->
+<div class="screen" id="screen-node9">
+  <div class="node-tag">Вузол 9 · User Flow — Пошук препарату</div>
+  <div class="node-tracker" id="tracker-node9"></div>
+  <div class="card">
+    <div class="context-label">Дизайн-дилема</div>
+    <p class="context-text">
+      Любов Петрівна хоче знайти свій «Еналаприл». Проблема:
+      <strong>один і той самий препарат випускають десятки виробників</strong>.
+      Вона боїться купити «не той».
+    </p>
+  </div>
+  <p class="question">Як допомогти їй знайти потрібний препарат?</p>
+  <div class="choices" id="choices-node9">
+    <button class="choice-btn" onclick="choose('node9','A')">
+      <span class="choice-letter">A</span>Текстовий пошук за назвою — вводить «Еналаприл» і бачить список
+    </button>
+    <button class="choice-btn" onclick="choose('node9','B')">
+      <span class="choice-letter">B</span>Навігація за категоріями та підкатегоріями
+    </button>
+    <button class="choice-btn" onclick="choose('node9','C')">
+      <span class="choice-letter">C</span>Сканер штрих-коду коробки + підтвердження назви
+    </button>
+  </div>
+  <div class="feedback feedback-partial" id="fb-node9-A">
+    <div class="feedback-head">△ Краще, ніж категорії — але не ідеально</div>
+    Текстовий пошук дасть список, але Любов Петрівна не знатиме, <em>який з 12 варіантів Еналаприлу</em> — її.
+    Є рішення, що усуває сам ризик помилки.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node9')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node9-B">
+    <div class="feedback-head">⚠ Категорії вже не підійшли</div>
+    Ми вже з'ясували в Вузлі 8: Любов Петрівна не знає медичних категорій.
+    Навігація вглиб тільки збільшить тривогу.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node9')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node9-C">
+    <div class="feedback-head">✓ Впізнавання важливіше за згадування!</div>
+    Сканер коробки = <strong>впізнавання</strong>, не <em>згадування</em>.
+    Дон Норман: <em>«Впізнавання легше, ніж згадування»</em> — зроби так, щоб люди впізнавали,
+    а не пригадували. Після сканування система точно знає, який саме Еналаприл — її.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node10')">Далі →</button></div>
+  </div>
+</div>
+
+<!-- NODE 10 -->
+<div class="screen" id="screen-node10">
+  <div class="node-tag">Вузол 10 · User Flow — Підтвердження замовлення</div>
+  <div class="node-tracker" id="tracker-node10"></div>
+  <div class="card">
+    <div class="context-label">Дизайн-дилема</div>
+    <p class="context-text">
+      Препарат знайдено. Тепер треба <strong>підтвердити замовлення</strong>.
+      Пам'ятай: найбільший біль Любові Петрівни — <em>страх купити не той препарат або не те дозування</em>.
+    </p>
+  </div>
+  <p class="question">Як показати, що це той самий препарат?</p>
+  <div class="choices" id="choices-node10">
+    <button class="choice-btn" onclick="choose('node10','A')">
+      <span class="choice-letter">A</span>Маленька зелена галочка поряд з назвою — ненав'язливо
+    </button>
+    <button class="choice-btn" onclick="choose('node10','B')">
+      <span class="choice-letter">B</span>Повноекранний підсумок: фото коробки + «Це той самий препарат, що ви замовляли 12 квітня»
+    </button>
+    <button class="choice-btn" onclick="choose('node10','C')">
+      <span class="choice-letter">C</span>Тільки назва і ціна — все інше зайве
+    </button>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node10-A">
+    <div class="feedback-head">⚠ Маленька галочка не знімає тривогу</div>
+    Галочка говорить «все ок» — але не пояснює <em>чому</em> ок.
+    Для людини з когнітивними обмеженнями потрібна <strong>явна, помітна підтримка</strong>, а не іконка.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node10')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node10-B">
+    <div class="feedback-head">✓ Дизайн вирішує реальний біль!</div>
+    User flow без врахування болю — формальність. Цей екран <strong>напряму вирішує</strong>
+    найбільшу тривогу Любові Петрівни. Конкретна дата попереднього замовлення +
+    фото коробки = повна впевненість. Це і є ціль дизайну.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node11')">Далі →</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node10-C">
+    <div class="feedback-head">⚠ «Зайве» — це якраз головне</div>
+    Назва і ціна — мінімум. Але для Любові Петрівни мінімум не знімає тривогу.
+    Дизайн для уразливих груп вимагає <strong>максимальної ясності</strong>, а не мінімалізму.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node10')">← Спробувати знову</button></div>
+  </div>
+</div>
+
+<!-- NODE 11 -->
+<div class="screen" id="screen-node11">
+  <div class="node-tag">Вузол 11 · User Flow — Оплата</div>
+  <div class="node-tracker" id="tracker-node11"></div>
+  <div class="card">
+    <div class="context-label">Дизайн-дилема</div>
+    <p class="context-text">
+      Останній крок user flow — <strong>оплата і доставка</strong>.
+      Любов Петрівна, ймовірно, не має банківської картки прив'язаної до смартфона.
+    </p>
+  </div>
+  <p class="question">Які методи оплати треба передбачити?</p>
+  <div class="choices" id="choices-node11">
+    <button class="choice-btn" onclick="choose('node11','A')">
+      <span class="choice-letter">A</span>Тільки банківська картка — найбезпечніше
+    </button>
+    <button class="choice-btn" onclick="choose('node11','B')">
+      <span class="choice-letter">B</span>Картка + Apple Pay / Google Pay
+    </button>
+    <button class="choice-btn" onclick="choose('node11','C')">
+      <span class="choice-letter">C</span>Картка + готівка кур'єру
+    </button>
+    <button class="choice-btn" onclick="choose('node11','D')">
+      <span class="choice-letter">D</span>Усі три + можливість оплатити пізніше
+    </button>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node11-A">
+    <div class="feedback-head">⚠ Бар'єр для першого замовлення</div>
+    Картка є у більшості, але <strong>прив'язати картку до незнайомого застосунку</strong> —
+    великий психологічний бар'єр для людини 64+. Треба зменшити бар'єр, а не збільшити.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node11')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-wrong" id="fb-node11-B">
+    <div class="feedback-head">⚠ Apple Pay не допоможе</div>
+    Apple / Google Pay — інструменти для активних цифрових користувачів, а не для Любові Петрівни.
+    У неї навряд чи налаштований NFC-гаманець.
+    <div class="action-row"><button class="btn btn-secondary" onclick="retry('node11')">← Спробувати знову</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node11-C">
+    <div class="feedback-head">✓ Знижує психологічний бар'єр!</div>
+    <strong>Готівка кур'єру</strong> = перше замовлення без ризику. Не треба нікуди вводити картку.
+    Після того, як вона переконається, що все добре — можна прив'язати картку на наступний раз.
+    Це класична стратегія зниження <em>«страху покупця»</em> для нових каналів.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node12')">Далі: Фінальна презентація →</button></div>
+  </div>
+  <div class="feedback feedback-correct" id="fb-node11-D">
+    <div class="feedback-head">✓ Максимальна гнучкість!</div>
+    Надати всі варіанти — правильно. Головне, що <strong>готівка є</strong>.
+    Щоправда, для першої версії краще реалізувати спочатку ключові 2–3 методи, щоб не розпорошуватися.
+    <div class="action-row"><button class="btn btn-primary" onclick="goTo('node12')">Далі: Фінальна презентація →</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ NODE 12 ═══════════════════════════ -->
+<div class="screen" id="screen-node12">
+  <div class="node-tag">Вузол 12 · Захист рішення перед командою</div>
+  <div class="node-tracker" id="tracker-node12"></div>
+
+  <div class="card">
+    <div class="context-label">Ситуація</div>
+    <p class="context-text">
+      <strong>Через 2 тижні.</strong> Ви показуєте персону + user flow на щоденній зустрічі команди.
+      Технічний директор підіймає руку:
+    </p>
+    <div class="dialog-box" style="margin-top:12px">
+      <div class="dialog-speaker">Технічний директор</div>
+      <div class="dialog-text">«Окей, гарна персона. Але я не розумію — чому ми не робимо для всіх? Молоді ж теж купують ліки. Розкажіть, чим обґрунтований цей вибір».</div>
+    </div>
+  </div>
+
+  <p class="question">Ваша відповідь технічному директору?</p>
+
+  <div class="choices" id="choices-node12">
+    <button class="choice-btn" onclick="choose('node12','A')">
+      <span class="choice-letter">A</span>
+      «Любов Петрівна — це найскладніший випадок. Якщо застосунок працює для неї, то й для решти теж — це принцип інклюзивного дизайну».
+    </button>
+    <button class="choice-btn" onclick="choose('node12','B')">
+      <span class="choice-letter">B</span>
+      «Бо так сказала керівниця продукту».
+    </button>
+    <button class="choice-btn" onclick="choose('node12','C')">
+      <span class="choice-letter">C</span>
+      «Ну, я просто так вирішив, бо вона мені здалася цікавою персоною».
+    </button>
+    <button class="choice-btn" onclick="choose('node12','D')">
+      <span class="choice-letter">D</span>
+      «Дослідження показало, що понад 60% покупців ліків онлайн — старші за 50. Ця група має найбільші невирішені болі (страх купити не те, потреба в посереднику). Саме цей сценарій забезпечує найбільше співвідношення охоплення та впливу».
+    </button>
+  </div>
+
+  <div class="feedback feedback-partial" id="fb-node12-A">
+    <div class="feedback-head">△ Добре, але неповне</div>
+    Принцип правильний, але технічний директор може сказати «мені не цікаві принципи, мені цікаві числа».
+    Посилання на принцип без <strong>даних</strong> — неповна аргументація.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goToFinale()">До підсумку →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node12-B">
+    <div class="feedback-head">⚠ Капітуляція</div>
+    Дизайнер, який не може обґрунтувати свої рішення, перестає бути дизайнером.
+    Це позиція виконавця, а не фахівця.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goToFinale()">До підсумку →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-wrong" id="fb-node12-C">
+    <div class="feedback-head">⚠ Найгірший варіант</div>
+    Технічний директор зрозумів: ви діяли за відчуттями, а не за даними. Довіра — втрачена.
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goToFinale()">До підсумку →</button>
+    </div>
+  </div>
+
+  <div class="feedback feedback-correct" id="fb-node12-D">
+    <div class="feedback-head">✓ Ідеально!</div>
+    Ви поєднали три речі: (1) <strong>дані з дослідження</strong>, (2) <strong>розрахунок охоплення та впливу</strong>,
+    (3) <strong>принцип інклюзивного дизайну</strong>. Технічний директор киває: «Окей, переконали. Йдемо малювати макети».
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="goToFinale()">До підсумку →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ПІДСУМОК ═══════════════════════════ -->
+
+<div class="screen" id="screen-finale">
+  <div class="ending-screen">
+    <span class="ending-icon" id="finaleIcon" role="img" aria-label="результат">🏆</span>
+    <h2 class="ending-title" id="finaleTitle" style="color: var(--accent)">Завантаження…</h2>
+    <div class="ending-score" id="finaleStars" role="img" aria-label="бал">
+      <span class="star lit">★</span><span class="star lit">★</span><span class="star lit">★</span>
+      <span class="star lit">★</span><span class="star lit">★</span>
+    </div>
+    <p class="ending-desc" id="finaleDesc">…</p>
+
+    <!-- блок: що засвоєно (формувальне оцінювання — навіть для низьких балів) -->
+    <div class="card" style="margin: 22px 0 18px; text-align:left; background: #f0f7f5; border-color: #b8dcd0">
+      <div class="context-label" style="color: var(--correct)">Що ви засвоїли</div>
+      <p id="finaleLearned" style="margin-top:10px; font-size: 14px; line-height: 1.6">…</p>
+    </div>
+
+    <!-- статистика проходження -->
+    <div class="card" style="margin: 18px 0; text-align:left">
+      <div class="context-label">Ваша статистика</div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-top:12px; font-size:14px;">
+        <div><strong>Бал:</strong> <span id="statScore">—</span> із 5</div>
+        <div><strong>Помилкових виборів:</strong> <span id="statMistakes">—</span></div>
+        <div><strong>Вузлів пройдено:</strong> <span id="statDone">—</span> із 12</div>
+        <div><strong>Бонус-вибір (4D):</strong> <span id="statBonus">—</span></div>
+      </div>
+      <div id="statErrorList" style="margin-top:14px; font-size:13px; color: var(--text-muted)"></div>
+    </div>
+
+    <div class="ending-tip" id="finaleTip">…</div>
+
+    <div style="margin-top: 18px; display:flex; gap: 10px; flex-wrap: wrap; justify-content:center">
+      <button class="btn btn-primary" onclick="restart()">Пройти знову</button>
+      <button class="btn btn-secondary" onclick="window.print()">Зберегти результат як PDF</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── КОНФІГУРАЦІЯ ВУЗЛІВ ───────────────────────────────────────────────
+const NODES = ['node1','node2','node3','node4','node5','node6','node7','node8','node9','node10','node11','node12'];
+const CORRECT = { node1:'C', node2:'B', node3:'B', node4:'D', node5:'B', node6:'C', node7:'B', node8:'D', node9:'C', node10:'B', node11:'C', node12:'D' };
+const PARTIAL = { node4:'C', node5:'C', node11:'D', node12:'A' };
+
+// Назви вузлів для звіту в підсумку
+const NODE_LABELS = {
+  node1:  'Вузол 1 — Перший вибір',
+  node2:  'Вузол 2 — Підготовка до інтерв\'ю',
+  node3:  'Вузол 3 — Перше інтерв\'ю',
+  node4:  'Вузол 4 — Аналіз даних',
+  node5:  'Вузол 5 — Деталізація персони',
+  node6:  'Вузол 6 — Перехід до user flow',
+  node7:  'Вузол 7 — Точка входу',
+  node8:  'Вузол 8 — Перший екран',
+  node9:  'Вузол 9 — Пошук препарату',
+  node10: 'Вузол 10 — Підтвердження',
+  node11: 'Вузол 11 — Оплата і доставка',
+  node12: 'Вузол 12 — Захист рішення'
+};
+
+// ── СТАН ──────────────────────────────────────────────────────────────
+let state = {
+  current: 'start',
+  done: [],                // вузли, де врешті обрано правильно/частково правильно
+  mistakesByNode: {},      // { node1: 0, node2: 2, ... } — кількість помилок у кожному вузлі
+  bonus: false             // чи обрано senior-варіант (4D)
+};
+
+function saveState() {
+  try { sessionStorage.setItem('uxScenario', JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = sessionStorage.getItem('uxScenario');
+    if (s) state = JSON.parse(s);
+    if (!state.mistakesByNode) state.mistakesByNode = {};
+  } catch(e) {}
+}
+
+function totalMistakes() {
+  return Object.values(state.mistakesByNode).reduce((a,b) => a + b, 0);
+}
+
+// ── НАВІГАЦІЯ ─────────────────────────────────────────────────────────
+function goTo(id) {
+  hideFeedbacks();
+  showScreen(id === 'start' ? 'screen-start' : 'screen-' + id);
+  state.current = id;
+  saveState();
+  updateProgress();
+  updateTracker();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); }
+}
+
+function hideFeedbacks() {
+  document.querySelectorAll('.feedback').forEach(f => f.classList.remove('show'));
+  document.querySelectorAll('.choice-btn').forEach(b => {
+    b.classList.remove('selected-correct','selected-wrong','selected-partial');
+    b.disabled = false;
+  });
+}
+
+// ── ОБРОБКА ВИБОРУ ────────────────────────────────────────────────────
+function choose(nodeId, letter) {
+  const btns = document.querySelectorAll(`#choices-${nodeId} .choice-btn`);
+  btns.forEach(b => b.disabled = true);
+
+  const correct = CORRECT[nodeId];
+  const partial = PARTIAL[nodeId];
+  const btnIdx = letter.charCodeAt(0) - 65;
+  const btn = btns[btnIdx];
+  const fbEl = document.getElementById(`fb-${nodeId}-${letter}`);
+
+  // ініціалізуємо лічильник помилок для цього вузла, якщо ще не було
+  if (state.mistakesByNode[nodeId] === undefined) state.mistakesByNode[nodeId] = 0;
+
+  if (letter === correct) {
+    btn.classList.add('selected-correct');
+    if (!state.done.includes(nodeId)) state.done.push(nodeId);
+    // Бонус: senior-вибір у вузлі 4 (відповідь D)
+    if (nodeId === 'node4' && letter === 'D') state.bonus = true;
+  } else if (partial && letter === partial) {
+    btn.classList.add('selected-partial');
+    if (!state.done.includes(nodeId)) state.done.push(nodeId);
+    // часткова відповідь — пів-помилки (округлюємо до 1)
+    state.mistakesByNode[nodeId] += 1;
+  } else {
+    btn.classList.add('selected-wrong');
+    state.mistakesByNode[nodeId] += 1;
+  }
+
+  if (fbEl) {
+    fbEl.classList.add('show');
+    fbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  saveState();
+  updateProgress();
+  updateBadge();
+}
+
+function retry(nodeId) {
+  hideFeedbacks();
+}
+
+// ── РОЗРАХУНОК ФІНАЛЬНОЇ КІНЦІВКИ ──────────────────────────────────────
+//
+// Логіка обчислення:
+//  - сумуємо ВСІ помилкові кліки у всіх вузлах
+//  - часткові відповіді (PARTIAL) рахуються як 1 помилка
+//  - бонус (відповідь 4D) знижує лічильник на 1
+//  - інтервали:
+//      0 помилок          → Досвідчений дизайнер (5/5)
+//      1–2 помилки        → Молодший дизайнер (4/5)
+//      3–4 помилки        → Початківець (3/5)
+//      5–7 помилок        → Перепишіть дослідження (2/5)
+//      8+ помилок         → Виконавець, не дизайнер (1/5)
+
+function calcFinale() {
+  let m = totalMistakes();
+  if (state.bonus) m = Math.max(0, m - 1); // бонус мінус одна помилка
+
+  let type, score;
+  if (m === 0)      { type = 'senior';    score = 5; }
+  else if (m <= 2)  { type = 'junior';    score = 4; }
+  else if (m <= 4)  { type = 'beginner';  score = 3; }
+  else if (m <= 7)  { type = 'rewrite';   score = 2; }
+  else              { type = 'executor';  score = 1; }
+
+  return { type, score, mistakes: totalMistakes(), adjustedMistakes: m };
+}
+
+const FINALE_DATA = {
+  senior: {
+    icon: '🏆',
+    iconLabel: 'трофей — найвищий результат',
+    color: 'var(--accent)',
+    title: '«Дизайнерський підхід»',
+    desc: 'Ви пройшли весь сценарій без помилок, скрізь обираючи відповіді на основі даних та принципів. Ви можете обґрунтувати кожне рішення — і це саме те, чого чекають від дизайнера інтерфейсів.',
+    learned: 'Ви впевнено застосовуєте: метод інтерв\'ю замість опитувань на ранній стадії, історичні питання замість гіпотетичних, групування інсайтів у персони, обґрунтування user flow болями персони, інклюзивний дизайн та аргументацію через дані.',
+    tip: '<strong>Що далі:</strong> Переходьте до фінального завдання — побудуйте user persona та user flow для власного проєкту в лабораторній роботі. Використайте сьогоднішній досвід як шаблон мислення.'
+  },
+  junior: {
+    icon: '📈',
+    iconLabel: 'зростання — добрий результат',
+    color: 'var(--accent3)',
+    title: '«Майже на місці»',
+    desc: 'Ви здебільшого правильно проходили, але мали 1–2 помилки. Принципи знаєте, але з аргументацією на основі даних — є куди рости.',
+    learned: 'Ви засвоїли логіку дослідження користувачів: чому інтерв\'ю кращі за опитування, як ставити історичні питання, як перетворити нотатки на user persona та побудувати user flow.',
+    tip: '<strong>Рекомендація:</strong> Перегляньте теоретичні відомості до лабораторної роботи. Спробуйте пройти сценарій ще раз — наступного разу ви досягнете найвищого результату.'
+  },
+  beginner: {
+    icon: '🌱',
+    iconLabel: 'паросток — на старті шляху',
+    color: 'var(--text-muted)',
+    title: '«У процесі засвоєння»',
+    desc: 'Ви проходили зі змішаним результатом, поверталися у кілька вузлів. Базові принципи зрозуміли — тепер треба закріпити.',
+    learned: 'Ви познайомилися з поняттями user persona, user flow, методами дослідження користувачів. Бачите різницю між підходами, але потребуєте більше практики, щоб обирати правильний з першої спроби.',
+    tip: '<strong>Рекомендація:</strong> Поверніться до теоретичних відомостей до лабораторної роботи. Пройдіть сценарій ще раз зі свідомим вибором, спираючись на принципи з теоретичного матеріалу.'
+  },
+  rewrite: {
+    icon: '📚',
+    iconLabel: 'книги — повернення до теорії',
+    color: 'var(--accent2)',
+    title: '«Поверніться до теорії»',
+    desc: 'Ви часто обирали «короткі шляхи». Дослідження користувачів — це не формальність, а основа всіх дизайнерських рішень. Не страшно — це нормально для першого проходження. Помилки тут безпечні: вони допомагають зрозуміти, де саме треба підсилити знання.',
+    learned: 'Ви побачили на практиці, чому деякі інтуїтивні підходи (опитування, ШІ замість дослідження, дизайн «для всіх») насправді не працюють. Це теж важливе знання — розуміння типових пасток дизайну.',
+    tip: '<strong>Рекомендація:</strong> Прочитайте теоретичні відомості до лабораторної роботи та перегляньте матеріали лекції. Потім пройдіть сценарій заново — і ви побачите, як змінилося ваше мислення.'
+  },
+  executor: {
+    icon: '🧭',
+    iconLabel: 'компас — починаємо орієнтуватися',
+    color: 'var(--text-muted)',
+    title: '«На старті»',
+    desc: 'Ви тільки знайомитеся з мисленням дизайнера інтерфейсів. Це нормально — ця тема нова, і пройти її з першої спроби без помилок майже неможливо. Дизайнер відрізняється від виконавця тим, що обґрунтовує рішення даними та принципами — і саме цьому ви будете вчитися найближчим часом.',
+    learned: 'Ви зробили перший важливий крок — побачили, що дизайн інтерфейсів не зводиться до «гарних екранів». Він починається з розуміння користувача, базується на дослідженні та потребує аргументації.',
+    tip: '<strong>Рекомендація:</strong> Поверніться до лекційного матеріалу та теоретичних відомостей до лабораторної роботи. Пройдіть сценарій заново. Корисна вправа: законспектуйте 5 ключових принципів з лекції і спробуйте свідомо застосувати їх у кожному вузлі.'
+  }
+};
+
+function goToFinale() {
+  const result = calcFinale();
+  const data = FINALE_DATA[result.type];
+
+  // Заповнюємо екран
+  const iconEl = document.getElementById('finaleIcon');
+  iconEl.textContent = data.icon;
+  iconEl.setAttribute('aria-label', data.iconLabel);
+  document.getElementById('finaleTitle').textContent = data.title;
+  document.getElementById('finaleTitle').style.color = data.color;
+  document.getElementById('finaleDesc').textContent = data.desc;
+  document.getElementById('finaleLearned').textContent = data.learned;
+  document.getElementById('finaleTip').innerHTML = data.tip;
+
+  // Зірочки
+  const starsEl = document.getElementById('finaleStars');
+  starsEl.innerHTML = '';
+  starsEl.setAttribute('aria-label', `Бал: ${result.score} із 5`);
+  for (let i = 1; i <= 5; i++) {
+    const span = document.createElement('span');
+    span.className = i <= result.score ? 'star lit' : 'star dim';
+    span.textContent = '★';
+    starsEl.appendChild(span);
+  }
+
+  // Статистика
+  document.getElementById('statScore').textContent = result.score;
+  document.getElementById('statMistakes').textContent = result.mistakes;
+  document.getElementById('statDone').textContent = state.done.length;
+  document.getElementById('statBonus').textContent = state.bonus ? 'так (–1 до помилок)' : 'ні';
+
+  // Список вузлів з помилками
+  const errorList = Object.entries(state.mistakesByNode)
+    .filter(([_, count]) => count > 0)
+    .sort((a, b) => NODES.indexOf(a[0]) - NODES.indexOf(b[0]));
+
+  const errorListEl = document.getElementById('statErrorList');
+  if (errorList.length === 0) {
+    errorListEl.innerHTML = '<strong style="color: var(--correct)">✓ Жодного помилкового кліку — усі вузли пройдено з першої спроби.</strong>';
+  } else {
+    let html = '<strong>Де помилялися:</strong><ul style="margin-top:6px; padding-left: 20px;">';
+    errorList.forEach(([nodeId, count]) => {
+      html += `<li>${NODE_LABELS[nodeId]} — ${count} ${count === 1 ? 'помилка' : count < 5 ? 'помилки' : 'помилок'}</li>`;
+    });
+    html += '</ul>';
+    errorListEl.innerHTML = html;
+  }
+
+  // Бейдж у шапці
+  document.getElementById('scoreBadge').textContent = `★ ${result.score} / 5`;
+
+  // Перехід
+  goTo('finale');
+}
+
+// ── ПРОГРЕС ───────────────────────────────────────────────────────────
+function updateProgress() {
+  const done = state.done.length;
+  const total = NODES.length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  const nodeIdx = NODES.indexOf(state.current);
+  if (nodeIdx >= 0) {
+    document.getElementById('progressLabel').textContent = `Вузол ${nodeIdx + 1} / ${total}`;
+  } else if (state.current === 'start') {
+    document.getElementById('progressLabel').textContent = 'Початок';
+  } else {
+    document.getElementById('progressLabel').textContent = 'Підсумок';
+  }
+}
+
+// ── БЕЙДЖ З ПОТОЧНОЮ КІЛЬКІСТЮ ПОМИЛОК ────────────────────────────────
+function updateBadge() {
+  const m = totalMistakes();
+  const badge = document.getElementById('scoreBadge');
+  if (m === 0) {
+    badge.textContent = '✓ Без помилок';
+    badge.style.color = 'var(--correct)';
+    badge.style.borderColor = 'var(--correct)';
+    badge.style.background = '#e8f5ec';
+  } else {
+    badge.textContent = `Помилок: ${m}`;
+    badge.style.color = 'var(--accent3)';
+    badge.style.borderColor = '#e0c47a';
+    badge.style.background = '#fdf6e8';
+  }
+}
+
+// ── ТРЕКЕР ────────────────────────────────────────────────────────────
+function updateTracker() {
+  NODES.forEach((nodeId, i) => {
+    const el = document.getElementById(`tracker-${nodeId}`);
+    if (!el) return;
+    el.innerHTML = '';
+    NODES.forEach((n, j) => {
+      if (j > 0) {
+        const line = document.createElement('div');
+        line.className = 'track-line';
+        el.appendChild(line);
+      }
+      const dot = document.createElement('div');
+      dot.className = 'track-dot';
+      if (state.done.includes(n)) dot.classList.add('done');
+      if (n === nodeId) dot.classList.add('current');
+      el.appendChild(dot);
+    });
+  });
+}
+
+// ── РЕСТАРТ ───────────────────────────────────────────────────────────
+function restart() {
+  state = { current: 'start', done: [], mistakesByNode: {}, bonus: false };
+  saveState();
+  hideFeedbacks();
+  goTo('start');
+  updateBadge();
+}
+
+// ── ІНІЦІАЛІЗАЦІЯ ─────────────────────────────────────────────────────
+loadState();
+if (state.current && state.current !== 'start' && state.current !== 'finale') {
+  hideFeedbacks();
+  showScreen('screen-' + state.current);
+} else if (state.current === 'finale') {
+  goToFinale();
+} else {
+  showScreen('screen-start');
+}
+updateProgress();
+updateTracker();
+updateBadge();
+</script>
+</body>
+</html>
